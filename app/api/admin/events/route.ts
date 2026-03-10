@@ -4,7 +4,7 @@ export async function GET(req: NextRequest) {
   const token = req.cookies.get("hmo_jwt")?.value;
   if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
+  const apiUrl = process.env.API_URL ?? process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
   const res = await fetch(`${apiUrl}/admin/events`, {
     headers: { Authorization: `Bearer ${token}` },
   });
