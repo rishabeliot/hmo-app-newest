@@ -2,22 +2,38 @@
   "name": "hmo-app-new",
   "version": "0.1.0",
   "private": true,
+  "workspaces": [
+    "api"
+  ],
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:studio": "drizzle-kit studio",
+    "db:push": "drizzle-kit push",
+    "api:dev": "npm run dev --workspace=api",
+    "api:build": "npm run build --workspace=api"
   },
   "dependencies": {
+    "drizzle-orm": "^0.45.1",
+    "framer-motion": "^12.35.1",
+    "html5-qrcode": "^2.3.8",
     "next": "16.1.6",
+    "postgres": "^3.4.8",
     "react": "19.2.3",
-    "react-dom": "19.2.3"
+    "react-dom": "19.2.3",
+    "react-hook-form": "^7.71.2"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "drizzle-kit": "^0.31.9",
+    "@netlify/plugin-nextjs": "^5.0.0",
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
     "tailwindcss": "^4",
