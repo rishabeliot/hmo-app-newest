@@ -14,6 +14,14 @@ type Event = {
   isUpcoming: boolean;
 };
 
+type EventStats = {
+  total_booked: number;
+  total_revenue: number;
+  revenue_razorpay: number;
+  revenue_cash: number;
+  total_allowlist: number;
+};
+
 type Attendee = {
   user_id: string;
   name: string | null;
@@ -702,6 +710,7 @@ export default function AdminEventDetailPage() {
   const eventId = params.id as string;
 
   const [event, setEvent] = useState<Event | null>(null);
+  const [stats, setStats] = useState<EventStats | null>(null);
   const [activeTab, setActiveTab] = useState<Tab>("attendees");
   const [loadingEvent, setLoadingEvent] = useState(true);
   const [closingTicketing, setClosingTicketing] = useState(false);
@@ -711,6 +720,9 @@ export default function AdminEventDetailPage() {
       .then((r) => r.json())
       .then((data) => { if (data.event) setEvent(data.event); })
       .finally(() => setLoadingEvent(false));
+    fetch(`/api/admin/events/${eventId}/stats`)
+      .then((r) => r.json())
+      .then((data) => { if (data.stats) setStats(data.stats); });
   }, [eventId]);
 
   async function handleCloseTicketing() {
@@ -818,6 +830,60 @@ export default function AdminEventDetailPage() {
               </button>
             </div>
           </div>
+        )}
+      </div>
+
+      <div style={{ display: "flex", gap: "12px", marginBottom: "20px" }}>
+        {stats === null ? (
+          <>
+            {[0, 1, 2].map((i) => (
+              <div
+                key={i}
+                style={{
+                  flex: 1,
+                  height: "80px",
+                  background: "rgba(255,255,255,0.05)",
+                  borderRadius: "12px",
+                }}
+              />
+            ))}
+          </>
+        ) : (
+          <>
+            <div
+              className="glass"
+              style={{ flex: 1, borderRadius: "12px", padding: "16px" }}
+            >
+              <p style={{ margin: "0 0 4px 0", color: "rgba(255,255,255,0.5)", fontSize: "12px", fontFamily: "var(--font-dm-sans)" }}>Booked</p>
+              <p style={{ margin: 0, color: "#fff", fontSize: "28px", fontFamily: "var(--font-jersey)", lineHeight: 1 }}>{stats.total_booked}</p>
+            </div>
+
+            <div
+              className="glass"
+              style={{ flex: 2, borderRadius: "12px", padding: "16px" }}
+            >
+              <p style={{ margin: "0 0 4px 0", color: "rgba(255,255,255,0.5)", fontSize: "12px", fontFamily: "var(--font-dm-sans)" }}>Revenue</p>
+              <p style={{ margin: "0 0 6px 0", color: "#fff", fontSize: "28px", fontFamily: "var(--font-jersey)", lineHeight: 1 }}>
+                ₹{(stats.total_revenue / 100).toLocaleString("en-IN")}
+              </p>
+              <div style={{ display: "flex", gap: "12px" }}>
+                <span style={{ color: "rgba(255,255,255,0.5)", fontSize: "12px", fontFamily: "var(--font-dm-sans)" }}>
+                  Razorpay ₹{(stats.revenue_razorpay / 100).toLocaleString("en-IN")}
+                </span>
+                <span style={{ color: "rgba(255,255,255,0.5)", fontSize: "12px", fontFamily: "var(--font-dm-sans)" }}>
+                  Cash ₹{(stats.revenue_cash / 100).toLocaleString("en-IN")}
+                </span>
+              </div>
+            </div>
+
+            <div
+              className="glass"
+              style={{ flex: 1, borderRadius: "12px", padding: "16px" }}
+            >
+              <p style={{ margin: "0 0 4px 0", color: "rgba(255,255,255,0.5)", fontSize: "12px", fontFamily: "var(--font-dm-sans)" }}>Allowlisted</p>
+              <p style={{ margin: 0, color: "#fff", fontSize: "28px", fontFamily: "var(--font-jersey)", lineHeight: 1 }}>{stats.total_allowlist}</p>
+            </div>
+          </>
         )}
       </div>
 

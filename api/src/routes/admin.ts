@@ -62,6 +62,27 @@ router.get('/events/:id', requireAuth, async (req: Request, res: Response): Prom
   res.json({ event });
 });
 
+// GET /admin/events/:id/stats
+router.get('/events/:id/stats', requireAuth, async (req: Request, res: Response): Promise<void> => {
+  if (!guardAdmin(req, res)) return;
+
+  const eventId = req.params.id as string;
+
+  const [stats] = await db
+    .select({
+      total_booked: sql<number>`COUNT(*) FILTER (WHERE ${eventAllowlist.bookingStatus} = 'Booked')`,
+      total_revenue: sql<number>`COALESCE(SUM(${eventAllowlist.ticketPrice}) FILTER (WHERE ${eventAllowlist.bookingStatus} = 'Booked'), 0)`,
+      revenue_razorpay: sql<number>`COALESCE(SUM(${eventAllowlist.ticketPrice}) FILTER (WHERE ${eventAllowlist.bookingStatus} = 'Booked' AND ${eventAllowlist.paymentMode} = 'razorpay'), 0)`,
+      revenue_cash: sql<number>`COALESCE(SUM(${eventAllowlist.ticketPrice}) FILTER (WHERE ${eventAllowlist.bookingStatus} = 'Booked' AND ${eventAllowlist.paymentMode} LIKE 'cash%'), 0)`,
+      total_allowlist: sql<number>`COUNT(*)`,
+    })
+    .from(eventAllowlist)
+    .innerJoin(users, eq(eventAllowlist.userId, users.id))
+    .where(and(eq(eventAllowlist.eventId, eventId), eq(users.isAdmin, false)));
+
+  res.json({ stats });
+});
+
 // GET /admin/events/:id/attendees
 router.get('/events/:id/attendees', requireAuth, async (req: Request, res: Response): Promise<void> => {
   if (!guardAdmin(req, res)) return;
