@@ -252,7 +252,14 @@ router.get('/events/:id/waitlist', requireAuth, async (req: Request, res: Respon
   const eventId = req.params.id as string;
 
   const entries = await db
-    .select()
+    .select({
+      id: waitlist.id,
+      name: waitlist.name,
+      email: waitlist.email,
+      ig_handle: waitlist.igHandle,
+      added_to_event: waitlist.addedToEvent,
+      created_at: waitlist.createdAt,
+    })
     .from(waitlist)
     .where(eq(waitlist.eventId, eventId));
 
