@@ -29,6 +29,11 @@ router.post('/complete-profile', requireAuth, async (req: Request, res: Response
     return;
   }
 
+  if (!name.trim().includes(' ')) {
+    res.status(400).json({ error: 'Please enter your full name' });
+    return;
+  }
+
   // phone_number: optional, digits only, 7–15 chars
   if (phone_number !== undefined) {
     if (typeof phone_number !== 'string' || !/^\+\d{7,15}$/.test(phone_number)) {
