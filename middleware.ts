@@ -19,7 +19,7 @@ export function middleware(req: NextRequest) {
     if (pathname === "/" || pathname === "/login") {
       return NextResponse.redirect(new URL("/events", req.url));
     }
-    if (pathname === "/admin/login") {
+    if (pathname === "/admin" || pathname === "/admin/login") {
       return NextResponse.redirect(new URL("/admin/events", req.url));
     }
   }
@@ -28,5 +28,5 @@ export function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/", "/login", "/complete-profile", "/events/:path*", "/admin/:path*", "/tickets/:path*"],
+  matcher: ["/", "/login", "/complete-profile", "/events/:path*", "/admin", "/admin/:path*", "/tickets/:path*"],
 };
