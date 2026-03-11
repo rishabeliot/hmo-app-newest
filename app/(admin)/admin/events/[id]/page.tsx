@@ -573,43 +573,37 @@ function ScannerTab() {
 
   useEffect(() => {
     mountedRef.current = true;
-    let scanner: { clear: () => Promise<void> } | null = null;
+    let scanner: { stop: () => Promise<void> } | null = null;
 
-    // Proactively request camera permission so Chrome's native dialog appears
-    // immediately (incognito mode doesn't inherit permissions from regular mode)
-    navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
-      .then((stream) => {
-        stream.getTracks().forEach((t) => t.stop());
-        if (!mountedRef.current) return;
-        import("html5-qrcode").then(({ Html5QrcodeScanner }) => {
-          if (!mountedRef.current) return;
-          const s = new Html5QrcodeScanner("qr-scanner-div", { fps: 10, qrbox: 250 }, false);
-          scanner = s;
-          s.render(
-            (decodedText: string) => {
-              try {
-                const parts = decodedText.split(".");
-                const payload = JSON.parse(atob(parts[1].replace(/-/g, "+").replace(/_/g, "/")));
-                admitTicket(payload.ticket_id);
-              } catch {
-                if (!mountedRef.current) return;
-                setScanState("error");
-                setMessage("Invalid QR code");
-                setTimeout(() => { if (mountedRef.current) { setScanState("idle"); setMessage(""); } }, 3000);
-              }
-            },
-            () => {}
-          );
-        });
-      })
-      .catch(() => {
+    import("html5-qrcode").then(({ Html5Qrcode }) => {
+      if (!mountedRef.current) return;
+      const qr = new Html5Qrcode("qr-scanner-div");
+      scanner = qr;
+      qr.start(
+        { facingMode: "environment" },
+        { fps: 10, qrbox: 250 },
+        (decodedText: string) => {
+          try {
+            const parts = decodedText.split(".");
+            const payload = JSON.parse(atob(parts[1].replace(/-/g, "+").replace(/_/g, "/")));
+            admitTicket(payload.ticket_id);
+          } catch {
+            if (!mountedRef.current) return;
+            setScanState("error");
+            setMessage("Invalid QR code");
+            setTimeout(() => { if (mountedRef.current) { setScanState("idle"); setMessage(""); } }, 3000);
+          }
+        },
+        undefined
+      ).catch(() => {
         if (!mountedRef.current) return;
         setCameraError("Camera access denied. Tap the camera icon in your browser's address bar to allow access, then reload.");
       });
+    });
 
     return () => {
       mountedRef.current = false;
-      if (scanner) scanner.clear().catch(() => {});
+      if (scanner) scanner.stop().catch(() => {});
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
