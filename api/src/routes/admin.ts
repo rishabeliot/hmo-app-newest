@@ -1,9 +1,11 @@
 import { Router, Request, Response } from 'express';
+import jwt from 'jsonwebtoken';
+import QRCode from 'qrcode';
 import { db } from '../../../lib/db';
 import { eventAllowlist, users, events, waitlist, tickets } from '../../../lib/db/schema';
 import { eq, and, ilike, or, desc, sql } from 'drizzle-orm';
 import { requireAuth } from '../middleware/auth';
-import { sendWaitlistInvite } from '../services/mailer';
+import { sendWaitlistInvite, sendTicketConfirmation } from '../services/mailer';
 
 const router = Router();
 
@@ -326,6 +328,58 @@ router.post('/waitlist/:id/promote', requireAuth, async (req: Request, res: Resp
   }
 
   res.json({ ok: true });
+});
+
+// POST /admin/tickets/:id/force-confirm
+// Manually runs the full confirm flow (QR + email) for a stuck pending ticket
+router.post('/tickets/:id/force-confirm', requireAuth, async (req: Request, res: Response): Promise<void> => {
+  if (!guardAdmin(req, res)) return;
+
+  const ticketId = req.params.id as string;
+  const { razorpay_payment_id } = req.body;
+
+  const [ticket] = await db.select().from(tickets).where(eq(tickets.id, ticketId));
+  if (!ticket) {
+    res.status(404).json({ error: 'Ticket not found' });
+    return;
+  }
+
+  if (ticket.bookingStatus === 'confirmed') {
+    res.status(200).json({ ok: true, message: 'Already confirmed', ticket_id: ticket.id });
+    return;
+  }
+
+  const qrCodeToken = jwt.sign(
+    { ticket_id: ticket.id, event_id: ticket.eventId, user_id: ticket.userId, issued_at: Date.now() },
+    process.env.QR_HMAC_SECRET!,
+    { expiresIn: '30d' }
+  );
+
+  await db
+    .update(tickets)
+    .set({
+      bookingStatus: 'confirmed',
+      qrCodeToken,
+      ...(razorpay_payment_id ? { razorpayPaymentId: razorpay_payment_id } : {}),
+    })
+    .where(eq(tickets.id, ticket.id));
+
+  await db
+    .update(eventAllowlist)
+    .set({ bookingStatus: 'Booked' })
+    .where(and(eq(eventAllowlist.eventId, ticket.eventId), eq(eventAllowlist.userId, ticket.userId)));
+
+  const [[user], [event], qrBuffer] = await Promise.all([
+    db.select().from(users).where(eq(users.id, ticket.userId)),
+    db.select().from(events).where(eq(events.id, ticket.eventId)),
+    QRCode.toBuffer(qrCodeToken, { width: 300, margin: 2 }),
+  ]);
+
+  if (user && event) {
+    await sendTicketConfirmation(user.email, user.name, qrBuffer, event.title, event.eventDate);
+  }
+
+  res.status(200).json({ ok: true, ticket_id: ticket.id });
 });
 
 export default router;

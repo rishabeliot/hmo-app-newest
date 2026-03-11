@@ -1,8 +1,11 @@
 import { Router, Request, Response } from 'express';
 import crypto from 'crypto';
+import jwt from 'jsonwebtoken';
+import QRCode from 'qrcode';
 import { db } from '../../../lib/db';
-import { tickets, eventAllowlist } from '../../../lib/db/schema';
+import { tickets, eventAllowlist, users, events } from '../../../lib/db/schema';
 import { and, eq } from 'drizzle-orm';
+import { sendTicketConfirmation } from '../services/mailer';
 
 const router = Router();
 
@@ -55,15 +58,31 @@ router.post('/razorpay', async (req: Request, res: Response): Promise<void> => {
     return;
   }
 
+  const qrCodeToken = jwt.sign(
+    { ticket_id: ticket.id, event_id: ticket.eventId, user_id: ticket.userId, issued_at: Date.now() },
+    process.env.QR_HMAC_SECRET!,
+    { expiresIn: '30d' }
+  );
+
   await db
     .update(tickets)
-    .set({ bookingStatus: 'confirmed', razorpayPaymentId })
+    .set({ bookingStatus: 'confirmed', razorpayPaymentId, qrCodeToken })
     .where(eq(tickets.id, ticket.id));
 
   await db
     .update(eventAllowlist)
-    .set({ bookingStatus: 'confirmed' })
+    .set({ bookingStatus: 'Booked' })
     .where(and(eq(eventAllowlist.eventId, ticket.eventId), eq(eventAllowlist.userId, ticket.userId)));
+
+  const [[user], [event], qrBuffer] = await Promise.all([
+    db.select().from(users).where(eq(users.id, ticket.userId)),
+    db.select().from(events).where(eq(events.id, ticket.eventId)),
+    QRCode.toBuffer(qrCodeToken, { width: 300, margin: 2 }),
+  ]);
+
+  if (user && event) {
+    sendTicketConfirmation(user.email, user.name, qrBuffer, event.title, event.eventDate).catch(console.error);
+  }
 
   res.status(200).json({ received: true });
 });
