@@ -711,6 +711,7 @@ export default function AdminEventDetailPage() {
 
   const [event, setEvent] = useState<Event | null>(null);
   const [stats, setStats] = useState<EventStats | null>(null);
+  const [statsError, setStatsError] = useState(false);
   const [activeTab, setActiveTab] = useState<Tab>("attendees");
   const [loadingEvent, setLoadingEvent] = useState(true);
   const [closingTicketing, setClosingTicketing] = useState(false);
@@ -722,7 +723,11 @@ export default function AdminEventDetailPage() {
       .finally(() => setLoadingEvent(false));
     fetch(`/api/admin/events/${eventId}/stats`)
       .then((r) => r.json())
-      .then((data) => { if (data.stats) setStats(data.stats); });
+      .then((data) => {
+        if (data.stats) setStats(data.stats);
+        else setStatsError(true);
+      })
+      .catch(() => setStatsError(true));
   }, [eventId]);
 
   async function handleCloseTicketing() {
@@ -834,7 +839,11 @@ export default function AdminEventDetailPage() {
       </div>
 
       <div style={{ display: "flex", gap: "12px", marginBottom: "20px" }}>
-        {stats === null ? (
+        {statsError ? (
+          <p style={{ color: "rgba(255,255,255,0.4)", fontSize: "13px", fontFamily: "var(--font-dm-sans)", margin: 0 }}>
+            Could not load stats
+          </p>
+        ) : stats === null ? (
           <>
             {[0, 1, 2].map((i) => (
               <div
@@ -842,7 +851,7 @@ export default function AdminEventDetailPage() {
                 style={{
                   flex: 1,
                   height: "80px",
-                  background: "rgba(255,255,255,0.05)",
+                  background: "rgba(255,255,255,0.1)",
                   borderRadius: "12px",
                 }}
               />
