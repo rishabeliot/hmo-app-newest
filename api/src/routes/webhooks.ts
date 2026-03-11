@@ -74,14 +74,14 @@ router.post('/razorpay', async (req: Request, res: Response): Promise<void> => {
     .set({ bookingStatus: 'Booked' })
     .where(and(eq(eventAllowlist.eventId, ticket.eventId), eq(eventAllowlist.userId, ticket.userId)));
 
-  const [[user], [event], qrBuffer] = await Promise.all([
+  const [[user], [eventRecord], qrBuffer] = await Promise.all([
     db.select().from(users).where(eq(users.id, ticket.userId)),
     db.select().from(events).where(eq(events.id, ticket.eventId)),
     QRCode.toBuffer(qrCodeToken, { width: 300, margin: 2 }),
   ]);
 
-  if (user && event) {
-    sendTicketConfirmation(user.email, user.name, qrBuffer, event.title, event.eventDate).catch(console.error);
+  if (user && eventRecord) {
+    sendTicketConfirmation(user.email, user.name, qrBuffer, eventRecord.title, eventRecord.eventDate).catch(console.error);
   }
 
   res.status(200).json({ received: true });
