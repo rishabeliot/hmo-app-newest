@@ -14,6 +14,11 @@ router.post('/', async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
+    if (!email) {
+      res.status(400).json({ error: 'Email is required' });
+      return;
+    }
+
     // Idempotency check via ig_handle (if provided)
     if (ig_handle) {
       const normalizedIg = ig_handle.toLowerCase().replace(/^@/, '');

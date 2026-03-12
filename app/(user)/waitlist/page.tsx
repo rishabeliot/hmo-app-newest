@@ -39,6 +39,10 @@ function WaitlistForm() {
   }, []);
 
   async function handleSubmit() {
+    if (!userEmail) {
+      setError("Please log in first so we can save your details");
+      return;
+    }
     if (!name.trim()) {
       setError("Name is required");
       return;
