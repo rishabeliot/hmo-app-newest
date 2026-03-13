@@ -13,6 +13,28 @@ router.get('/', requireAuth, async (req: Request, res: Response): Promise<void> 
     db.select().from(eventAllowlist).where(eq(eventAllowlist.userId, userId)),
   ]);
 
+  // Auto-insert allowlist rows for non-waitlisted open events
+  const allowlistSet = new Set(allowlistRows.map((r) => r.eventId));
+  const toAutoAdd = allEvents.filter(
+    (e) => !e.waitlistingEnabled && !e.isTicketingClosed && !allowlistSet.has(e.id)
+  );
+
+  if (toAutoAdd.length > 0) {
+    await Promise.all(
+      toAutoAdd.map((e) =>
+        db.insert(eventAllowlist).values({
+          eventId: e.id,
+          userId,
+          ticketPrice: e.defaultTicketPrice,
+          paymentMode: 'razorpay',
+          bookingStatus: 'invited',
+        }).onConflictDoNothing()
+      )
+    );
+    const refreshed = await db.select().from(eventAllowlist).where(eq(eventAllowlist.userId, userId));
+    allowlistRows.splice(0, allowlistRows.length, ...refreshed);
+  }
+
   const allowlistByEvent = new Map(allowlistRows.map((r) => [r.eventId, r]));
 
   const eventsWithFlags = allEvents.map((event) => {

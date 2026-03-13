@@ -1,7 +1,8 @@
 import { Router, Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import { db, users } from '../../../lib/db';
-import { eq } from 'drizzle-orm';
+import { events as eventsTable, eventAllowlist } from '../../../lib/db/schema';
+import { eq, and } from 'drizzle-orm';
 import { checkRateLimit, sendOtp, verifyOtp } from '../services/otp';
 
 const router = Router();
@@ -61,6 +62,26 @@ router.post('/verify-otp', async (req: Request, res: Response): Promise<void> =>
   if (!user) {
     res.status(500).json({ error: 'User lookup failed' });
     return;
+  }
+
+  // Auto-insert allowlist rows for non-waitlisted open events
+  const openEvents = await db
+    .select()
+    .from(eventsTable)
+    .where(and(eq(eventsTable.waitlistingEnabled, false), eq(eventsTable.isTicketingClosed, false)));
+
+  if (openEvents.length > 0) {
+    await Promise.all(
+      openEvents.map((e) =>
+        db.insert(eventAllowlist).values({
+          eventId: e.id,
+          userId: user.id,
+          ticketPrice: e.defaultTicketPrice,
+          paymentMode: 'razorpay',
+          bookingStatus: 'invited',
+        }).onConflictDoNothing()
+      )
+    );
   }
 
   const token = jwt.sign(

@@ -5,7 +5,7 @@ import { db } from '../../../lib/db';
 import { eventAllowlist, users, events, waitlist, tickets } from '../../../lib/db/schema';
 import { eq, and, ilike, or, desc, sql } from 'drizzle-orm';
 import { requireAuth } from '../middleware/auth';
-import { sendWaitlistInvite, sendTicketConfirmation } from '../services/mailer';
+import { sendTicketConfirmation } from '../services/mailer';
 
 const router = Router();
 
@@ -50,6 +50,8 @@ router.get('/events/:id', requireAuth, async (req: Request, res: Response): Prom
       venue: events.venue,
       isTicketingClosed: events.isTicketingClosed,
       isUpcoming: events.isUpcoming,
+      waitlistingEnabled: events.waitlistingEnabled,
+      defaultTicketPrice: events.defaultTicketPrice,
     })
     .from(events)
     .where(eq(events.id, eventId));
@@ -268,6 +270,22 @@ router.patch('/events/:id/close-ticketing', requireAuth, async (req: Request, re
   res.json({ ok: true });
 });
 
+// PATCH /admin/events/:id/toggle-waitlisting
+router.patch('/events/:id/toggle-waitlisting', requireAuth, async (req: Request, res: Response): Promise<void> => {
+  if (!guardAdmin(req, res)) return;
+
+  const eventId = req.params.id as string;
+  const { waitlisting_enabled } = req.body;
+
+  if (typeof waitlisting_enabled !== 'boolean') {
+    res.status(400).json({ error: 'waitlisting_enabled must be a boolean' });
+    return;
+  }
+
+  await db.update(events).set({ waitlistingEnabled: waitlisting_enabled }).where(eq(events.id, eventId));
+  res.json({ ok: true });
+});
+
 // GET /admin/events/:id/waitlist
 router.get('/events/:id/waitlist', requireAuth, async (req: Request, res: Response): Promise<void> => {
   if (!guardAdmin(req, res)) return;
@@ -328,8 +346,6 @@ router.post('/waitlist/:id/promote', requireAuth, async (req: Request, res: Resp
     return;
   }
 
-  const [eventRecord] = await db.select({ title: events.title, eventDate: events.eventDate }).from(events).where(eq(events.id, event_id));
-
   await Promise.all([
     db.insert(eventAllowlist).values({
       eventId: event_id,
@@ -340,13 +356,6 @@ router.post('/waitlist/:id/promote', requireAuth, async (req: Request, res: Resp
     }),
     db.update(waitlist).set({ addedToEvent: true }).where(eq(waitlist.id, entryId)),
   ]);
-
-  if (eventRecord) {
-    const appUrl = process.env.CORS_ORIGIN ?? 'https://hearmeout.live';
-    sendWaitlistInvite(user.email, user.name, eventRecord.title, eventRecord.eventDate, appUrl).catch((err) =>
-      console.error('Failed to send waitlist invite email:', err)
-    );
-  }
 
   res.json({ ok: true });
 });

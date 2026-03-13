@@ -1,0 +1,2 @@
+ALTER TABLE events ADD COLUMN waitlisting_enabled BOOLEAN NOT NULL DEFAULT true;
+ALTER TABLE events ADD COLUMN default_ticket_price INTEGER NOT NULL DEFAULT 175000;

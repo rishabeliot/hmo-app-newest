@@ -46,6 +46,8 @@ export const events = pgTable("events", {
   timeDisplay: varchar("time_display", { length: 50 }),
   isTicketingClosed: boolean("is_ticketing_closed").default(false).notNull(),
   isUpcoming: boolean("is_upcoming").default(false).notNull(),
+  waitlistingEnabled: boolean("waitlisting_enabled").default(true).notNull(),
+  defaultTicketPrice: integer("default_ticket_price").default(175000).notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 });
 

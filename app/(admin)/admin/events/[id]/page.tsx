@@ -12,6 +12,8 @@ type Event = {
   venue: string | null;
   isTicketingClosed: boolean;
   isUpcoming: boolean;
+  waitlistingEnabled: boolean;
+  defaultTicketPrice: number;
 };
 
 type EventStats = {
@@ -715,6 +717,7 @@ export default function AdminEventDetailPage() {
   const [activeTab, setActiveTab] = useState<Tab>("attendees");
   const [loadingEvent, setLoadingEvent] = useState(true);
   const [closingTicketing, setClosingTicketing] = useState(false);
+  const [togglingWaitlist, setTogglingWaitlist] = useState(false);
 
   useEffect(() => {
     fetch(`/api/admin/events/${eventId}`)
@@ -736,6 +739,20 @@ export default function AdminEventDetailPage() {
     const res = await fetch(`/api/admin/events/${eventId}/close-ticketing`, { method: "PATCH" });
     if (res.ok) setEvent((prev) => (prev ? { ...prev, isTicketingClosed: true } : prev));
     setClosingTicketing(false);
+  }
+
+  async function handleToggleWaitlisting() {
+    if (!event) return;
+    const newVal = !event.waitlistingEnabled;
+    if (!confirm(`${newVal ? "Enable" : "Disable"} waitlisting for this event?`)) return;
+    setTogglingWaitlist(true);
+    const res = await fetch(`/api/admin/events/${eventId}/toggle-waitlisting`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ waitlisting_enabled: newVal }),
+    });
+    if (res.ok) setEvent((prev) => (prev ? { ...prev, waitlistingEnabled: newVal } : prev));
+    setTogglingWaitlist(false);
   }
 
   async function handleExportCsv() {
@@ -797,6 +814,24 @@ export default function AdminEventDetailPage() {
               </p>
             </div>
             <div style={{ display: "flex", gap: "8px", flexShrink: 0 }}>
+              <button
+                onClick={handleToggleWaitlisting}
+                disabled={togglingWaitlist}
+                className="glass"
+                style={{
+                  borderRadius: "99px",
+                  padding: "8px 14px",
+                  fontSize: "13px",
+                  fontFamily: "var(--font-dm-sans)",
+                  cursor: "pointer",
+                  color: event?.waitlistingEnabled ? "rgba(255,255,255,0.7)" : "#4ade80",
+                  background: "transparent",
+                  border: "1px solid rgba(255,255,255,0.15)",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {togglingWaitlist ? "..." : event?.waitlistingEnabled ? "Waitlist: ON" : "Waitlist: OFF"}
+              </button>
               <button
                 onClick={handleCloseTicketing}
                 disabled={!!event?.isTicketingClosed || closingTicketing}
