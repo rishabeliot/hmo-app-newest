@@ -332,8 +332,6 @@ Redis must be running locally (`redis-server`).
 
 ## Active Sprint
 
-Deployment
-- I have a domain hosted on Netlify, and want to reuse the same domain with different paths (/login, /events, /admin, /waitlist) so that Razorpay works fine
-- I need the DB to be on Neon
-- Let me know what API keys I need to add/siwtch to production to ensure this keeps working
-- Configure resend to be able to send from noreply@hearmeoutcollective.in (I have used this before)
+Enhancements to the platform
+
+I want to do away with the concept of users having to join a waitlist before they can buy a ticket, which basically means that all users who login with an email will see "Buy Ticket". I dont want to abandon the waitlist, I just want to automatically add a user to the event_allowlist as soon as they login et all users with ticket_price to 1750 by default.Skip the email that is sent when a user is promoted. They should be able to book and get confirmation email with QR. I will want to undo this so let's make this a config at an event level. Inside each event, there should be a config to enable and disable waitlisting.
