@@ -414,7 +414,7 @@ export default function LandingPage() {
           zIndex: 0,
         }}
       >
-        <source src="/Backgroundmp4.mp4" type="video/mp4" />
+        <source src="https://res.cloudinary.com/dktcgelpr/video/upload/v1778337107/Backgroundmp4_xxgpig.mp4" type="video/mp4" />
       </video>
 
       {/* Content overlay */}
