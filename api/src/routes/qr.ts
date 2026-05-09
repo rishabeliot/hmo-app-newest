@@ -8,7 +8,7 @@ import { eq } from 'drizzle-orm';
 export const qrImageRouter = Router();
 
 qrImageRouter.get('/:token', async (req: Request, res: Response): Promise<void> => {
-  const { token } = req.params;
+  const token = req.params.token as string;
 
   if (!token) {
     res.status(400).json({ error: 'token is required' });
