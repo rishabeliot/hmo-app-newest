@@ -48,6 +48,12 @@ export const events = pgTable("events", {
   isUpcoming: boolean("is_upcoming").default(false).notNull(),
   waitlistingEnabled: boolean("waitlisting_enabled").default(true).notNull(),
   defaultTicketPrice: integer("default_ticket_price").default(175000).notNull(),
+  capacity: integer("capacity"),
+  mapsUrl: text("maps_url"),
+  greetingImageUrl: text("greeting_image_url"),
+  checkoutImageUrl: text("checkout_image_url"),
+  confirmationImageUrl: text("confirmation_image_url"),
+  ticketVisualUrl: text("ticket_visual_url"),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 });
 

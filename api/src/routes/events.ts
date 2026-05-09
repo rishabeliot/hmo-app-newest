@@ -1,17 +1,31 @@
 import { Router, Request, Response } from 'express';
 import { db, events as eventsTable, eventAllowlist } from '../../../lib/db';
 import { eq } from 'drizzle-orm';
-import { requireAuth } from '../middleware/auth';
+import { optionalAuth } from '../middleware/auth';
 
 const router = Router();
 
-router.get('/', requireAuth, async (req: Request, res: Response): Promise<void> => {
-  const userId = req.user!.user_id;
+router.get('/', optionalAuth, async (req: Request, res: Response): Promise<void> => {
+  const allEvents = await db.select().from(eventsTable);
 
-  const [allEvents, allowlistRows] = await Promise.all([
-    db.select().from(eventsTable),
-    db.select().from(eventAllowlist).where(eq(eventAllowlist.userId, userId)),
-  ]);
+  if (!req.user) {
+    const eventsWithFlags = allEvents.map((event) => ({
+      ...event,
+      isAllowed: false,
+      isBooked: false,
+      ticketPrice: null,
+    }));
+    const upcoming = eventsWithFlags.find((e) => e.isUpcoming) ?? null;
+    const past = eventsWithFlags
+      .filter((e) => !e.isUpcoming)
+      .sort((a, b) => new Date(b.eventDate).getTime() - new Date(a.eventDate).getTime());
+    res.json({ upcoming, past });
+    return;
+  }
+
+  const userId = req.user.user_id;
+
+  const allowlistRows = await db.select().from(eventAllowlist).where(eq(eventAllowlist.userId, userId));
 
   // Auto-insert allowlist rows for non-waitlisted open events
   const allowlistSet = new Set(allowlistRows.map((r) => r.eventId));

@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 
 const glassPill: React.CSSProperties = {
@@ -22,12 +23,24 @@ export default function TicketConfirmationPage() {
   const params = useParams();
   const router = useRouter();
   const id = params.id as string;
+  const [confirmationImageUrl, setConfirmationImageUrl] = useState<string | null>(null);
+  const [ticketVisualUrl, setTicketVisualUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch(`/api/tickets/${id}`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (data?.event?.confirmationImageUrl) setConfirmationImageUrl(data.event.confirmationImageUrl);
+        if (data?.event?.ticketVisualUrl) setTicketVisualUrl(data.event.ticketVisualUrl);
+      })
+      .catch(() => {});
+  }, [id]);
 
   return (
     <main
       style={{
         minHeight: "100dvh",
-        background: "#0D0D0D",
+        background: confirmationImageUrl ? `url('${confirmationImageUrl}') center/cover no-repeat fixed` : "#0D0D0D",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
@@ -77,16 +90,18 @@ export default function TicketConfirmationPage() {
       <div style={{ height: "32px" }} />
 
       {/* Ticket image */}
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src="/ticket.png"
-        alt="Your ticket"
-        style={{
-          width: "85%",
-          maxWidth: "320px",
-          display: "block",
-        }}
-      />
+      {(ticketVisualUrl ?? "/ticket.png") && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={ticketVisualUrl ?? "/ticket.png"}
+          alt="Your ticket"
+          style={{
+            width: "85%",
+            maxWidth: "320px",
+            display: "block",
+          }}
+        />
+      )}
 
       {/* Press and hold hint */}
       <p

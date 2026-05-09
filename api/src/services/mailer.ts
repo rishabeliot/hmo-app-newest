@@ -17,7 +17,7 @@ export async function sendTicketConfirmation(
   const html = `<!DOCTYPE html>
 <html>
 <head><meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /></head>
-<body style="margin:0;padding:0;background:#000;font-family:sans-serif;color:#fff;">
+<body style="margin:0;padding:0;background:#fff;font-family:sans-serif;color:#000;">
   <table width="100%" cellpadding="0" cellspacing="0" style="max-width:480px;margin:0 auto;padding:40px 24px;">
     <tr><td>
       <p style="font-size:28px;font-weight:700;margin:0 0 4px;">${name ? `Hey ${name},` : 'Hey,'}</p>
@@ -39,7 +39,7 @@ export async function sendTicketConfirmation(
   await resend.emails.send({
     from: process.env.EMAIL_FROM!,
     to: email,
-    subject: `You're in! 🎟 ${eventTitle}`,
+    subject: `You're in! ${eventTitle}`,
     html,
     attachments: [
       {

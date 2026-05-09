@@ -146,7 +146,7 @@ function ProfilePopup({ user, onClose }: { user: User; onClose: () => void }) {
   );
 }
 
-function UpcomingCard({ event }: { event: Event }) {
+function UpcomingCard({ event, isAuthenticated }: { event: Event; isAuthenticated: boolean }) {
   const href = event.isAllowed
     ? `/events/${event.id}/welcome`
     : `/waitlist?event=${event.id}`;
@@ -172,6 +172,10 @@ function UpcomingCard({ event }: { event: Event }) {
     <div style={{ ...pillBase, color: "rgba(255,255,255,0.4)", cursor: "default", opacity: 0.5 }}>
       Sold Out
     </div>
+  ) : !isAuthenticated ? (
+    <Link href="/login" style={{ ...pillBase, textDecoration: "none", color: "white" }}>
+      Login to book
+    </Link>
   ) : (
     <Link href={href} style={{ ...pillBase, textDecoration: "none" }}>
       {event.isAllowed ? "Buy ticket" : "Register"}
@@ -277,9 +281,10 @@ function UpcomingCard({ event }: { event: Event }) {
   );
 }
 
-function PastEventCard({ event }: { event: Event }) {
+function PastEventCard({ event, onNoUrl }: { event: Event; onNoUrl: () => void }) {
   const handleClick = () => {
     if (event.youtubeUrl) window.open(event.youtubeUrl, "_blank");
+    else onNoUrl();
   };
 
   return (
@@ -297,7 +302,7 @@ function PastEventCard({ event }: { event: Event }) {
         backgroundPosition: "center",
         position: "relative",
         overflow: "hidden",
-        cursor: event.youtubeUrl ? "pointer" : "default",
+        cursor: "pointer",
         border: "none",
         padding: 0,
         flexShrink: 0,
@@ -355,6 +360,12 @@ export default function EventsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showProfile, setShowProfile] = useState(false);
+  const [toast, setToast] = useState(false);
+
+  const showToast = () => {
+    setToast(true);
+    setTimeout(() => setToast(false), 2500);
+  };
 
   const load = async () => {
     setLoading(true);
@@ -364,16 +375,13 @@ export default function EventsPage() {
         fetch("/api/auth/me"),
         fetch("/api/events"),
       ]);
-      if (!userRes.ok || !eventsRes.ok) {
+      const userData = userRes.ok ? await userRes.json() : null;
+      if (!eventsRes.ok) {
         setError("Failed to load. Please try again.");
         return;
       }
-      const [userData, eventsPayload] = await Promise.all([
-        userRes.json(),
-        eventsRes.json(),
-      ]);
       setUser(userData);
-      setEventsData(eventsPayload);
+      setEventsData(await eventsRes.json());
     } catch {
       setError("Failed to load. Please try again.");
     } finally {
@@ -391,22 +399,39 @@ export default function EventsPage() {
     <main
       className="min-h-dvh"
       style={{
-        backgroundImage: "url('/purple2.png')",
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        backgroundAttachment: "fixed",
+        // backgroundImage: "url('/purple2.png')",
+        // backgroundSize: "cover",
+        // backgroundPosition: "center",
+        // backgroundAttachment: "fixed",
+        backgroundColor: "#000000", /* ← swap: comment line above + uncomment this for solid black */
         paddingBottom: "80px",
       }}
     >
       {/* Top bar */}
-      <div style={{ paddingTop: "28px" }}>
-        <div
+      <div
+        style={{
+          paddingTop: "28px",
+          display: "flex",
+          alignItems: "flex-start",
+          justifyContent: "space-between",
+          paddingLeft: "38px",
+          paddingRight: "11px",
+        }}
+      >
+        <p
           style={{
-            display: "flex",
-            justifyContent: "flex-end",
-            paddingRight: "11px",
+            fontFamily: "var(--font-jersey)",
+            fontSize: "40px",
+            color: "white",
+            margin: 0,
+            lineHeight: 1.1,
+            minHeight: "44px",
           }}
         >
+          {!loading && firstName ? `Are you ready, ${firstName}?` : ""}
+        </p>
+
+        {user ? (
           <button
             onClick={() => setShowProfile(true)}
             aria-label="Open profile"
@@ -421,39 +446,33 @@ export default function EventsPage() {
               alignItems: "center",
               justifyContent: "center",
               padding: 0,
+              flexShrink: 0,
             }}
           >
-            <svg
-              width="28"
-              height="28"
-              viewBox="0 0 28 28"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
+            <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
               <circle cx="14" cy="10" r="5" stroke="white" strokeWidth="2" />
-              <path
-                d="M4 26c0-5.523 4.477-10 10-10s10 4.477 10 10"
-                stroke="white"
-                strokeWidth="2"
-                strokeLinecap="round"
-              />
+              <path d="M4 26c0-5.523 4.477-10 10-10s10 4.477 10 10" stroke="white" strokeWidth="2" strokeLinecap="round" />
             </svg>
           </button>
-        </div>
-
-        <p
-          style={{
-            fontFamily: "var(--font-jersey)",
-            fontSize: "40px",
-            color: "white",
-            margin: "8px 0 0",
-            paddingLeft: "38px",
-            lineHeight: 1.1,
-            minHeight: "56px",
-          }}
-        >
-          {!loading && firstName ? `Are you ready, ${firstName}?` : ""}
-        </p>
+        ) : (
+          <Link
+            href="/login"
+            aria-label="Login"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: "44px",
+              height: "44px",
+              flexShrink: 0,
+            }}
+          >
+            <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="14" cy="10" r="5" stroke="white" strokeWidth="2" />
+              <path d="M4 26c0-5.523 4.477-10 10-10s10 4.477 10 10" stroke="white" strokeWidth="2" strokeLinecap="round" />
+            </svg>
+          </Link>
+        )}
       </div>
 
       {/* Error state */}
@@ -493,7 +512,7 @@ export default function EventsPage() {
             {loading ? (
               <SkeletonCard width={292} height={258} radius={18} />
             ) : eventsData?.upcoming ? (
-              <UpcomingCard event={eventsData.upcoming} />
+              <UpcomingCard event={eventsData.upcoming} isAuthenticated={user !== null} />
             ) : (
               <div
                 style={{
@@ -545,7 +564,7 @@ export default function EventsPage() {
             ) : eventsData?.past.length ? (
               <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                 {eventsData.past.map((event) => (
-                  <PastEventCard key={event.id} event={event} />
+                  <PastEventCard key={event.id} event={event} onNoUrl={showToast} />
                 ))}
               </div>
             ) : (
@@ -563,6 +582,37 @@ export default function EventsPage() {
           </div>
         </>
       )}
+
+      {/* Toast */}
+      <AnimatePresence>
+        {toast && (
+          <motion.div
+            key="toast"
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 16 }}
+            style={{
+              position: "fixed",
+              bottom: "32px",
+              left: "50%",
+              transform: "translateX(-50%)",
+              background: "rgba(255,255,255,0.12)",
+              backdropFilter: "blur(16px)",
+              WebkitBackdropFilter: "blur(16px)",
+              border: "1px solid rgba(255,255,255,0.2)",
+              borderRadius: "24px",
+              padding: "10px 20px",
+              fontFamily: "var(--font-dm-sans)",
+              fontSize: "14px",
+              color: "white",
+              whiteSpace: "nowrap",
+              zIndex: 100,
+            }}
+          >
+            Full set coming soon
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Profile popup */}
       <AnimatePresence>

@@ -16,6 +16,7 @@ interface EventData {
   isTicketingClosed: boolean;
   isAllowed: boolean;
   ticketPrice: number | null;
+  checkoutImageUrl: string | null;
 }
 
 function formatDate(dateStr: string) {
@@ -238,7 +239,7 @@ export default function TicketPage() {
       <main
         style={{
           minHeight: "100dvh",
-          backgroundImage: "url('/confirm.png')",
+          backgroundImage: `url('${event?.checkoutImageUrl ?? "/confirm.png"}')`,
           backgroundSize: "cover",
           backgroundPosition: "center",
           backgroundAttachment: "fixed",

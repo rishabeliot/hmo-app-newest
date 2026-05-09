@@ -36,6 +36,44 @@ router.get('/events', requireAuth, async (req: Request, res: Response): Promise<
   res.json({ events: allEvents });
 });
 
+// POST /admin/events
+router.post('/events', requireAuth, async (req: Request, res: Response): Promise<void> => {
+  if (!guardAdmin(req, res)) return;
+
+  const {
+    title, description, eventDate, timeDisplay, venue, location, mapsUrl,
+    defaultTicketPrice, capacity, waitlistingEnabled, isUpcoming,
+    backgroundImageUrl, greetingImageUrl, checkoutImageUrl, confirmationImageUrl, ticketVisualUrl,
+  } = req.body;
+
+  if (!title || !eventDate || defaultTicketPrice === undefined) {
+    res.status(400).json({ error: 'title, eventDate, and defaultTicketPrice are required' });
+    return;
+  }
+
+  const [event] = await db.insert(events).values({
+    title,
+    description: description ?? null,
+    eventDate: new Date(eventDate),
+    timeDisplay: timeDisplay ?? null,
+    venue: venue ?? null,
+    location: location ?? null,
+    mapsUrl: mapsUrl ?? null,
+    defaultTicketPrice: Number(defaultTicketPrice),
+    capacity: capacity != null ? Number(capacity) : null,
+    waitlistingEnabled: waitlistingEnabled ?? true,
+    isUpcoming: isUpcoming ?? true,
+    isTicketingClosed: false,
+    backgroundImageUrl: backgroundImageUrl ?? null,
+    greetingImageUrl: greetingImageUrl ?? null,
+    checkoutImageUrl: checkoutImageUrl ?? null,
+    confirmationImageUrl: confirmationImageUrl ?? null,
+    ticketVisualUrl: ticketVisualUrl ?? null,
+  }).returning();
+
+  res.status(201).json({ event });
+});
+
 // GET /admin/events/:id
 router.get('/events/:id', requireAuth, async (req: Request, res: Response): Promise<void> => {
   if (!guardAdmin(req, res)) return;

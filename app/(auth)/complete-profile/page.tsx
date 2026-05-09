@@ -89,6 +89,10 @@ function CompleteProfileForm() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const email = searchParams.get("email") ?? "";
+  const redirectTo = (() => {
+    const r = searchParams.get("redirect");
+    return r?.startsWith("/") ? r : "/events";
+  })();
 
   const {
     register,
@@ -119,7 +123,7 @@ function CompleteProfileForm() {
     });
 
     if (res.ok) {
-      router.push("/events");
+      router.push(redirectTo);
     }
   }
 

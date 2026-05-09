@@ -8,6 +8,7 @@ export default function WelcomePage() {
   const params = useParams();
   const id = params.id as string;
   const [firstName, setFirstName] = useState("");
+  const [greetingImageUrl, setGreetingImageUrl] = useState<string | null>(null);
 
   useEffect(() => {
     fetch("/api/auth/me")
@@ -17,14 +18,23 @@ export default function WelcomePage() {
         setFirstName(name.split(" ")[0] ?? "");
       })
       .catch(() => {});
-  }, []);
+
+    fetch("/api/events")
+      .then((r) => r.json())
+      .then((data) => {
+        const all = [data?.upcoming, ...(data?.past ?? [])].filter(Boolean);
+        const event = all.find((e: { id: string }) => e.id === id);
+        if (event?.greetingImageUrl) setGreetingImageUrl(event.greetingImageUrl);
+      })
+      .catch(() => {});
+  }, [id]);
 
   return (
     <main
       style={{
         position: "relative",
         minHeight: "100dvh",
-        backgroundImage: "url('/greeting.png')",
+        backgroundImage: `url('${greetingImageUrl ?? "/greeting.png"}')`,
         backgroundSize: "cover",
         backgroundPosition: "center",
         backgroundAttachment: "fixed",

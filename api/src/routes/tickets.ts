@@ -8,6 +8,7 @@ import { eventAllowlist, tickets, events, users } from '../../../lib/db/schema';
 import { and, eq } from 'drizzle-orm';
 import { requireAuth } from '../middleware/auth';
 import { sendTicketConfirmation } from '../services/mailer';
+import { sendWhatsAppTicketConfirmation } from '../services/whatsapp';
 
 const router = Router();
 
@@ -152,6 +153,9 @@ router.post('/confirm', requireAuth, async (req: Request, res: Response): Promis
 
   if (user && event) {
     sendTicketConfirmation(user.email, user.name, qrBuffer, event.title, event.eventDate).catch(console.error);
+    if (user.phoneNumber) {
+      sendWhatsAppTicketConfirmation(user.phoneNumber).catch(console.error);
+    }
   }
 
   res.status(200).json({ ticket_id: ticket.id });
@@ -237,11 +241,42 @@ router.post('/dev-confirm', requireAuth, async (req: Request, res: Response): Pr
 
   if (user && event) {
     sendTicketConfirmation(user.email, user.name, qrBuffer, event.title, event.eventDate).catch(console.error);
+    if (user.phoneNumber) {
+      sendWhatsAppTicketConfirmation(user.phoneNumber).catch(console.error);
+    }
   }
 
   res.status(200).json({ ticket_id: ticketId });
   } catch (err) {
     console.error('[dev-confirm]', err);
+    res.status(500).json({ error: String(err instanceof Error ? err.message : err) });
+  }
+});
+
+// GET /tickets — list caller's confirmed tickets with event details
+router.get('/', requireAuth, async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userId = req.user!.user_id;
+    const userTickets = await db
+      .select({
+        id: tickets.id,
+        eventId: tickets.eventId,
+        bookingStatus: tickets.bookingStatus,
+        entryStatus: tickets.entryStatus,
+        createdAt: tickets.createdAt,
+        event: {
+          title: events.title,
+          eventDate: events.eventDate,
+          venue: events.venue,
+          backgroundImageUrl: events.backgroundImageUrl,
+        },
+      })
+      .from(tickets)
+      .innerJoin(events, eq(tickets.eventId, events.id))
+      .where(and(eq(tickets.userId, userId), eq(tickets.bookingStatus, 'confirmed')));
+    res.json(userTickets);
+  } catch (err) {
+    console.error('[GET /tickets]', err);
     res.status(500).json({ error: String(err instanceof Error ? err.message : err) });
   }
 });

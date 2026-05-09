@@ -8,6 +8,7 @@ import ticketsRouter from './routes/tickets';
 import webhooksRouter from './routes/webhooks';
 import adminRouter from './routes/admin';
 import waitlistRouter from './routes/waitlist';
+import { qrImageRouter, qrTicketRouter } from './routes/qr';
 
 const app = express();
 
@@ -25,6 +26,8 @@ app.use('/events', eventsRouter);
 app.use('/tickets', ticketsRouter);
 app.use('/admin', adminRouter);
 app.use('/waitlist', waitlistRouter);
+app.use('/qr-image', qrImageRouter);
+app.use('/qr', qrTicketRouter);
 
 app.listen(Number(process.env.PORT ?? 4000), () =>
   console.log(`[api] http://localhost:${process.env.PORT ?? 4000}`)

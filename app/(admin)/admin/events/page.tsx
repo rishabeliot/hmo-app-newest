@@ -45,16 +45,34 @@ export default function AdminEventsPage() {
         paddingBottom: "40px",
       }}
     >
-      <h1
-        style={{
-          fontFamily: "var(--font-jersey)",
-          fontSize: "36px",
-          color: "#ffffff",
-          margin: "0 0 24px 0",
-        }}
-      >
-        Events
-      </h1>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "24px" }}>
+        <h1
+          style={{
+            fontFamily: "var(--font-jersey)",
+            fontSize: "36px",
+            color: "#ffffff",
+            margin: 0,
+          }}
+        >
+          Events
+        </h1>
+        <button
+          onClick={() => router.push("/admin/events/new")}
+          style={{
+            fontFamily: "var(--font-dm-sans)",
+            fontSize: "13px",
+            color: "#ffffff",
+            background: "rgba(255,255,255,0.1)",
+            border: "1px solid rgba(255,255,255,0.2)",
+            borderRadius: "24px",
+            padding: "8px 16px",
+            cursor: "pointer",
+            whiteSpace: "nowrap",
+          }}
+        >
+          + Add Event
+        </button>
+      </div>
 
       {loading && (
         <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>

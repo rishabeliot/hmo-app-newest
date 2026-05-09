@@ -332,6 +332,4 @@ Redis must be running locally (`redis-server`).
 
 ## Active Sprint
 
-Enhancements to the platform
-
-I want to do away with the concept of users having to join a waitlist before they can buy a ticket, which basically means that all users who login with an email will see "Buy Ticket". I dont want to abandon the waitlist, I just want to automatically add a user to the event_allowlist as soon as they login et all users with ticket_price to 1750 by default.Skip the email that is sent when a user is promoted. They should be able to book and get confirmation email with QR. I will want to undo this so let's make this a config at an event level. Inside each event, there should be a config to enable and disable waitlisting.
+For any non-upcoming event, if the URL doesn't exist, there's no feedback to the user. Add a toast message by re-using toast message components from other screens. If a user clicks on a past event which doesn;t have a URL, this toast message should be displayed - "Full set coming soon".
