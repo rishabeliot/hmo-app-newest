@@ -405,6 +405,7 @@ export default function LandingPage() {
         loop
         playsInline
         onCanPlayThrough={() => setVideoReady(true)}
+        onError={() => setVideoReady(true)}
         style={{
           position: "absolute",
           inset: 0,
