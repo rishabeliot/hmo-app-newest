@@ -34,7 +34,8 @@ export default function WelcomePage() {
       style={{
         position: "relative",
         minHeight: "100dvh",
-        backgroundImage: `url('${greetingImageUrl ?? "/greeting.png"}')`,
+        backgroundImage: greetingImageUrl ? `url('${greetingImageUrl}')` : "none",
+        backgroundColor: "#000",
         backgroundSize: "cover",
         backgroundPosition: "center",
         backgroundAttachment: "fixed",

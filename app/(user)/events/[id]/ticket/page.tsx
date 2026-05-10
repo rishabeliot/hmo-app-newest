@@ -209,26 +209,6 @@ export default function TicketPage() {
     }
   }
 
-  function handleShare() {
-    const link = `${window.location.origin}/login`;
-    if (navigator.clipboard) {
-      navigator.clipboard.writeText(link).then(() => showToast("Link copied")).catch(() => fallbackCopy(link));
-    } else {
-      fallbackCopy(link);
-    }
-  }
-
-  function fallbackCopy(text: string) {
-    const el = document.createElement("textarea");
-    el.value = text;
-    el.style.cssText = "position:absolute;left:-9999px;top:-9999px";
-    document.body.appendChild(el);
-    el.select();
-    document.execCommand("copy");
-    document.body.removeChild(el);
-    showToast("Link copied");
-  }
-
   const ticketPriceDisplay = event?.ticketPrice ? `₹${event.ticketPrice / 100}` : "—";
   const dateDisplay = event?.eventDate ? formatDate(event.eventDate) : "—";
 
@@ -239,14 +219,15 @@ export default function TicketPage() {
       <main
         style={{
           minHeight: "100dvh",
-          backgroundImage: `url('${event?.checkoutImageUrl ?? "/confirm.png"}')`,
+          backgroundImage: event?.checkoutImageUrl ? `url('${event.checkoutImageUrl}')` : "none",
+          backgroundColor: "#000",
           backgroundSize: "cover",
           backgroundPosition: "center",
           backgroundAttachment: "fixed",
         }}
       >
         {/* Upper section: fixed-height container holding the overlapping text + card */}
-        <div style={{ position: "relative", height: "560px" }}>
+        <div style={{ position: "relative", height: "640px" }}>
           {/* "Confirm" — Jersey 25, 80px */}
           <p
             style={{
@@ -291,7 +272,6 @@ export default function TicketPage() {
               transform: "translateX(-50%)",
               top: "173px",
               width: "285px",
-              height: "375px",
               borderRadius: "18px",
               backdropFilter: "blur(10px)",
               WebkitBackdropFilter: "blur(10px)",
@@ -380,10 +360,7 @@ export default function TicketPage() {
             {/* Bottom row */}
             <div
               style={{
-                marginTop: "31px",
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
+                marginTop: "12px",
                 paddingBottom: "4px",
               }}
             >
@@ -395,18 +372,8 @@ export default function TicketPage() {
                   color: "white",
                 }}
               >
-                Doors shut at{" "}
-                <span style={{ fontWeight: 700 }}>5:30pm</span>
-              </span>
-              <span
-                style={{
-                  fontFamily: "var(--font-dm-sans)",
-                  fontSize: "12px",
-                  fontWeight: 700,
-                  color: "white",
-                }}
-              >
-                No late entry.
+                Additonal cover charge applicable after{" "}
+                <span style={{ fontWeight: 700 }}>10:30pm</span>
               </span>
             </div>
           </div>
@@ -549,51 +516,6 @@ export default function TicketPage() {
             </button>
           )}
 
-          {/* Share row */}
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "10px",
-              paddingLeft: "62px",
-              paddingRight: "24px",
-              width: "100%",
-              boxSizing: "border-box",
-            }}
-          >
-            <span
-              style={{
-                fontFamily: "var(--font-dm-sans)",
-                fontSize: "15.5px",
-                fontWeight: 400,
-                color: "white",
-              }}
-            >
-              Share this link to bring your homies
-            </span>
-            <button
-              onClick={handleShare}
-              aria-label="Copy waitlist link"
-              style={{
-                width: "36px",
-                height: "36px",
-                minWidth: "36px",
-                borderRadius: "50%",
-                // background: "rgba(255,255,255,0.12)",
-                backdropFilter: "blur(6px)",
-                WebkitBackdropFilter: "blur(6px)",
-                border: "1px solid rgba(255,255,255,0.1)",
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                padding: 0,
-              }}
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/chain.png" alt="share" width={11} height={11} />
-            </button>
-          </div>
         </div>
       </main>
 
