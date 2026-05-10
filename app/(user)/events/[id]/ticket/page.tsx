@@ -361,9 +361,17 @@ export default function TicketPage() {
                       fontSize: "12px",
                       fontWeight: 300,
                       color: "rgba(255,255,255,0.85)",
+                      display: "flex",
+                      alignItems: "baseline",
+                      gap: "6px",
                     }}
                   >
                     {value}
+                    {label === "Ticket Price" && value !== "..." && (
+                      <span style={{ fontSize: "10px", color: "rgba(255,255,255,0.45)", fontWeight: 300 }}>
+                        (Rs. 1,000 cover)
+                      </span>
+                    )}
                   </span>
                 </div>
               ))}

@@ -21,16 +21,16 @@ export async function sendTicketConfirmation(
   <table width="100%" cellpadding="0" cellspacing="0" style="max-width:480px;margin:0 auto;padding:40px 24px;">
     <tr><td>
       <p style="font-size:28px;font-weight:700;margin:0 0 4px;">${name ? `Hey ${name},` : 'Hey,'}</p>
-      <p style="font-size:16px;font-weight:400;margin:0 0 32px;color:rgba(255,255,255,0.7);">You're in. Here's your ticket.</p>
+      <p style="font-size:16px;font-weight:400;margin:0 0 32px;color:black;">You're in. Here's your ticket.</p>
 
-      <p style="font-size:14px;margin:0 0 4px;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:0.08em;">Event</p>
+      <p style="font-size:14px;margin:0 0 4px;color:black;text-transform:uppercase;letter-spacing:0.08em;">Event</p>
       <p style="font-size:18px;font-weight:600;margin:0 0 4px;">${eventTitle}</p>
-      <p style="font-size:14px;color:rgba(255,255,255,0.7);margin:0 0 32px;">${formatted}</p>
+      <p style="font-size:14px;color:black;margin:0 0 32px;">${formatted}</p>
 
-      <p style="font-size:13px;color:rgba(255,255,255,0.5);margin:0 0 12px;">Your entry QR code — present this at the venue:</p>
+      <p style="font-size:13px;color:black;margin:0 0 12px;">Your entry QR code — present this at the venue:</p>
       <img src="cid:qr-code" width="220" height="220" alt="Entry QR" style="display:block;border-radius:8px;" />
 
-      <p style="font-size:12px;color:rgba(255,255,255,0.4);margin:40px 0 0;">See you on the floor. — HMO</p>
+      <p style="font-size:12px;color:black;margin:40px 0 0;">See you on the floor. — HMO</p>
     </td></tr>
   </table>
 </body>
@@ -39,7 +39,7 @@ export async function sendTicketConfirmation(
   await resend.emails.send({
     from: process.env.EMAIL_FROM!,
     to: email,
-    subject: `You're in! ${eventTitle}`,
+    subject: `You're in! ${eventTitle} - Hear Me Out`,
     html,
     attachments: [
       {
