@@ -334,6 +334,11 @@ export default function LandingPage() {
   const [videoReady, setVideoReady] = useState(false);
   const [loaderHidden, setLoaderHidden] = useState(false);
 
+  useEffect(() => {
+    const t = setTimeout(() => setVideoReady(true), 3000);
+    return () => clearTimeout(t);
+  }, []);
+
   async function handleMyBookings() {
     setCheckingAuth(true);
     try {
@@ -404,7 +409,7 @@ export default function LandingPage() {
         muted
         loop
         playsInline
-        onCanPlayThrough={() => setVideoReady(true)}
+        onCanPlay={() => setVideoReady(true)}
         onError={() => setVideoReady(true)}
         style={{
           position: "absolute",
