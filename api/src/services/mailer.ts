@@ -30,6 +30,8 @@ export async function sendTicketConfirmation(
       <p style="font-size:13px;color:black;margin:0 0 12px;">Your entry QR code — present this at the venue:</p>
       <img src="cid:qr-code" width="220" height="220" alt="Entry QR" style="display:block;border-radius:8px;" />
 
+      <p style="font-size:13px;color:black;margin:24px 0 0;line-height:1.6;">HMO tickets are priced by entry time:<br /><br />Before 6 PM: ₹1,800<br />6–8 PM: ₹1,900<br />8–10 PM: ₹2,000<br /><br />Your payment of ₹1,800 is complete. Any balance will be collected at the venue based on your arrival time.</p>
+
       <p style="font-size:12px;color:black;margin:40px 0 0;">See you on the floor. — HMO</p>
     </td></tr>
   </table>
