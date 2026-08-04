@@ -7,8 +7,8 @@ export default function AmplitudeProvider({ children }: { children: React.ReactN
   useEffect(() => {
     const key = process.env.NEXT_PUBLIC_AMPLITUDE_API_KEY;
     if (key) {
-      amplitude.init(key, { autocapture: true });
       amplitude.add(sessionReplayPlugin({ sampleRate: 1 }));
+      amplitude.init(key, { autocapture: true });
     }
   }, []);
   return <>{children}</>;
