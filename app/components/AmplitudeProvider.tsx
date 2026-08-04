@@ -12,8 +12,8 @@ export default function AmplitudeProvider({ children }: { children: React.ReactN
         amplitude.add(sessionReplayPlugin({ sampleRate: 1 }));
         amplitude.init(key, { autocapture: true });
       })
-      .catch(() => {
-        // Session replay failed to load — init analytics without it
+      .catch((e) => {
+        console.error('[Amplitude SR] Session replay plugin failed to load:', e);
         amplitude.init(key, { autocapture: true });
       });
   }, []);
