@@ -152,7 +152,7 @@ router.post('/confirm', requireAuth, async (req: Request, res: Response): Promis
   ]);
 
   if (user && event) {
-    sendTicketConfirmation(user.email, user.name, qrBuffer, event.title, event.eventDate).catch(console.error);
+    sendTicketConfirmation(user.email, user.name, qrBuffer, event.title, event.eventDate, event.mapsUrl).catch(console.error);
     if (user.phoneNumber) {
       sendWhatsAppTicketConfirmation(user.phoneNumber).catch(console.error);
     }
@@ -240,7 +240,7 @@ router.post('/dev-confirm', requireAuth, async (req: Request, res: Response): Pr
   ]);
 
   if (user && event) {
-    sendTicketConfirmation(user.email, user.name, qrBuffer, event.title, event.eventDate).catch(console.error);
+    sendTicketConfirmation(user.email, user.name, qrBuffer, event.title, event.eventDate, event.mapsUrl).catch(console.error);
     if (user.phoneNumber) {
       sendWhatsAppTicketConfirmation(user.phoneNumber).catch(console.error);
     }

@@ -19,6 +19,7 @@ interface EventData {
   ticketPrice: number | null;
   checkoutImageUrl: string | null;
   pricingInfo: string | null;
+  mapsUrl: string | null;
 }
 
 function formatDate(dateStr: string) {
@@ -412,11 +413,11 @@ export default function TicketPage() {
             {/* Details grid */}
             <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
               {[
-                { label: "Location", value: loading ? "..." : (event?.location ?? "Koramangala") },
+                { label: "Location", value: loading ? "..." : (event?.location ?? "Koramangala"), href: !loading && event?.mapsUrl ? event.mapsUrl : undefined },
                 { label: "Date", value: loading ? "..." : dateDisplay },
                 { label: "Time", value: loading ? "..." : (event?.timeDisplay ?? "4pm - 11pm") },
                 { label: "Ticket Price", value: loading ? "..." : ticketPriceDisplay },
-              ].map(({ label, value }) => (
+              ].map(({ label, value, href }) => (
                 <div key={label} style={{ display: "flex", alignItems: "baseline", gap: "8px" }}>
                   <span
                     style={{
@@ -429,16 +430,33 @@ export default function TicketPage() {
                   >
                     {label}
                   </span>
-                  <span
-                    style={{
-                      fontFamily: "var(--font-dm-sans)",
-                      fontSize: "12px",
-                      fontWeight: 300,
-                      color: "rgba(255,255,255,0.85)",
-                    }}
-                  >
-                    {value}
-                  </span>
+                  {href ? (
+                    <a
+                      href={href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{
+                        fontFamily: "var(--font-dm-sans)",
+                        fontSize: "12px",
+                        fontWeight: 300,
+                        color: "rgba(255,255,255,0.85)",
+                        textDecoration: "underline",
+                      }}
+                    >
+                      {value}
+                    </a>
+                  ) : (
+                    <span
+                      style={{
+                        fontFamily: "var(--font-dm-sans)",
+                        fontSize: "12px",
+                        fontWeight: 300,
+                        color: "rgba(255,255,255,0.85)",
+                      }}
+                    >
+                      {value}
+                    </span>
+                  )}
                 </div>
               ))}
               {event?.pricingInfo && (

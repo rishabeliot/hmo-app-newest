@@ -6,7 +6,8 @@ export async function sendTicketConfirmation(
   name: string | null,
   qrBuffer: Buffer,
   eventTitle: string,
-  eventDate: Date | string
+  eventDate: Date | string,
+  mapsUrl?: string | null
 ): Promise<void> {
   const formatted = new Date(eventDate).toLocaleDateString('en-IN', {
     day: 'numeric',
@@ -26,6 +27,7 @@ export async function sendTicketConfirmation(
       <p style="font-size:14px;margin:0 0 4px;color:black;text-transform:uppercase;letter-spacing:0.08em;">Event</p>
       <p style="font-size:18px;font-weight:600;margin:0 0 4px;">${eventTitle}</p>
       <p style="font-size:14px;color:black;margin:0 0 32px;">${formatted}</p>
+      ${mapsUrl ? `<a href="${mapsUrl}" target="_blank" style="font-size:14px;color:#000;margin:0 0 32px;display:inline-block;text-decoration:underline;">📍 Venue location</a>` : ''}
 
       <p style="font-size:13px;color:black;margin:0 0 12px;">Your entry QR code — present this at the venue:</p>
       <img src="cid:qr-code" width="220" height="220" alt="Entry QR" style="display:block;border-radius:8px;" />
