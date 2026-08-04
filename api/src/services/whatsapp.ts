@@ -21,7 +21,7 @@ export async function sendWhatsAppTicketConfirmation(
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      template_name: 'confirmation_message_3',
+      template_name: 'confirmation_message_5',
       broadcast_name: 'ticket_booking',
       parameters: [],
     }),
