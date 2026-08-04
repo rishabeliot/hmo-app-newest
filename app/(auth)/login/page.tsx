@@ -3,6 +3,7 @@
 import { useRef, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
+import { track, identify } from "@/lib/analytics";
 
 type Phase = "email" | "otp";
 
@@ -48,6 +49,7 @@ export default function LoginPage() {
     setEmailError("");
     setLoading(true);
     setError("");
+    track("login_email_submitted");
     try {
       const res = await fetch("/api/auth/send-otp", {
         method: "POST",
@@ -56,12 +58,14 @@ export default function LoginPage() {
       });
       if (!res.ok) {
         const data = await res.json();
+        track("login_failed", { reason: res.status === 429 ? "rate_limited" : "send_failed" });
         setError(data?.error ?? "Failed to send OTP");
         return;
       }
       setPhase("otp");
       setTimeout(() => otpRefs.current[0]?.focus(), 350);
     } catch {
+      track("login_failed", { reason: "network", email });
       setError("Network error. Please try again.");
     } finally {
       setLoading(false);
@@ -81,6 +85,7 @@ export default function LoginPage() {
     if (code.length < 6) return;
     setLoading(true);
     setError("");
+    track("otp_submitted");
     try {
       const res = await fetch("/api/auth/verify-otp", {
         method: "POST",
@@ -89,15 +94,19 @@ export default function LoginPage() {
       });
       const data = await res.json();
       if (!res.ok) {
+        track("login_failed", { reason: "invalid_otp" });
         setError(data?.error ?? "Invalid OTP");
         return;
       }
+      track("login_completed", { is_new_user: data.is_new_user });
+      fetch("/api/auth/me").then((r) => r.json()).then((u) => { if (u?.id) identify(u.id); }).catch(() => {});
       if (data.is_new_user) {
         router.push(`/complete-profile?email=${encodeURIComponent(email)}`);
       } else {
         router.push("/events");
       }
     } catch {
+      track("login_failed", { reason: "network", email });
       setError("Network error. Please try again.");
     } finally {
       setLoading(false);

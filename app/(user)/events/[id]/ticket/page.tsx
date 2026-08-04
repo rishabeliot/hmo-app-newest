@@ -5,6 +5,7 @@ import { useRouter, useParams } from "next/navigation";
 import Script from "next/script";
 import { useToast, Toast } from "@/app/components/Toast";
 import { TERMS_AND_CONDITIONS } from "@/lib/terms";
+import { track } from "@/lib/analytics";
 
 interface EventData {
   id: string;
@@ -211,6 +212,13 @@ export default function TicketPage() {
         const all: EventData[] = [upcoming, ...past].filter(Boolean) as EventData[];
         const found = all.find((e) => e.id === id) ?? null;
         setEvent(found);
+        if (found) {
+          track("checkout_viewed", {
+            event_id: found.id,
+            event_title: found.title,
+            ticket_price: found.ticketPrice != null ? found.ticketPrice / 100 : null,
+          });
+        }
       })
       .catch(() => {})
       .finally(() => setLoading(false));
@@ -239,6 +247,7 @@ export default function TicketPage() {
       }
 
       if (!orderRes.ok) {
+        track("payment_failed", { event_id: id, reason: "order_creation_failed" });
         showToast(orderData.error ?? "Failed to create order");
         return;
       }
@@ -267,19 +276,23 @@ export default function TicketPage() {
           });
           const confirmData = await confirmRes.json();
           if (confirmRes.ok && confirmData.ticket_id) {
+            track("payment_completed", { event_id: id, ticket_id: confirmData.ticket_id, amount: orderData.amount / 100 });
             router.push(`/tickets/${confirmData.ticket_id}`);
           } else {
+            track("payment_failed", { event_id: id, reason: "confirmation_failed" });
             showToast(confirmData.error ?? "Payment confirmation failed");
           }
         },
         modal: {
           ondismiss: () => {
+            track("payment_failed", { event_id: id, reason: "razorpay_dismissed" });
             showToast("Payment cancelled");
             setPaying(false);
           },
         },
       };
 
+      track("payment_initiated", { event_id: id, amount: orderData.amount / 100 });
       const rp = new window.Razorpay(options);
       rp.open();
     } catch (err) {
@@ -441,7 +454,7 @@ export default function TicketPage() {
                     Tickets are priced by entry time
                   </span>
                   <button
-                    onClick={() => setShowPricingInfo(true)}
+                    onClick={() => { track("pricing_info_opened"); setShowPricingInfo(true); }}
                     style={{
                       background: "none",
                       border: "1px solid rgba(255,255,255,0.35)",
@@ -491,7 +504,7 @@ export default function TicketPage() {
               type="button"
               role="checkbox"
               aria-checked={accepted}
-              onClick={() => setAccepted(!accepted)}
+              onClick={() => { if (!accepted) track("terms_accepted"); setAccepted(!accepted); }}
               style={{
                 width: "18px",
                 height: "18px",
@@ -521,7 +534,7 @@ export default function TicketPage() {
                 color: "white",
                 cursor: "pointer",
               }}
-              onClick={() => setAccepted(!accepted)}
+              onClick={() => { if (!accepted) track("terms_accepted"); setAccepted(!accepted); }}
             >
               Please accept{" "}
               <button

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Jersey_25, DM_Sans } from "next/font/google";
 import "./globals.css";
+import AmplitudeProvider from "./components/AmplitudeProvider";
 
 const jersey25 = Jersey_25({
   variable: "--font-jersey",
@@ -26,7 +27,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${jersey25.variable} ${dmSans.variable}`}>
-      <body>{children}</body>
+      <body><AmplitudeProvider>{children}</AmplitudeProvider></body>
     </html>
   );
 }

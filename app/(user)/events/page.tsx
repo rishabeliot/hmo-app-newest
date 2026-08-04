@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
+import { track } from "@/lib/analytics";
 
 interface User {
   id: string;
@@ -173,11 +174,11 @@ function UpcomingCard({ event, isAuthenticated }: { event: Event; isAuthenticate
       Sold Out
     </div>
   ) : !isAuthenticated ? (
-    <Link href="/login" style={{ ...pillBase, textDecoration: "none", color: "white" }}>
+    <Link href="/login" onClick={() => track("event_card_clicked", { event_id: event.id, type: "upcoming" })} style={{ ...pillBase, textDecoration: "none", color: "white" }}>
       Login to book
     </Link>
   ) : (
-    <Link href={href} style={{ ...pillBase, textDecoration: "none" }}>
+    <Link href={href} onClick={() => track("event_card_clicked", { event_id: event.id, type: "upcoming" })} style={{ ...pillBase, textDecoration: "none" }}>
       {event.isAllowed ? "Buy ticket" : "Register"}
     </Link>
   );
@@ -283,6 +284,7 @@ function UpcomingCard({ event, isAuthenticated }: { event: Event; isAuthenticate
 
 function PastEventCard({ event, onNoUrl }: { event: Event; onNoUrl: () => void }) {
   const handleClick = () => {
+    track("event_card_clicked", { event_id: event.id, type: "past" });
     if (event.youtubeUrl) window.open(event.youtubeUrl, "_blank");
     else onNoUrl();
   };
@@ -377,12 +379,15 @@ export default function EventsPage() {
       ]);
       const userData = userRes.ok ? await userRes.json() : null;
       if (!eventsRes.ok) {
+        track("events_load_failed", { error: "Failed to load events" });
         setError("Failed to load. Please try again.");
         return;
       }
       setUser(userData);
       setEventsData(await eventsRes.json());
-    } catch {
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : "Network error";
+      track("events_load_failed", { error: errorMsg });
       setError("Failed to load. Please try again.");
     } finally {
       setLoading(false);
@@ -390,6 +395,7 @@ export default function EventsPage() {
   };
 
   useEffect(() => {
+    track("events_page_viewed");
     load();
   }, []);
 

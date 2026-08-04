@@ -3,6 +3,7 @@
 import { useSearchParams, useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { Suspense, useEffect, useState } from "react";
+import { track } from "@/lib/analytics";
 
 type FormValues = {
   name: string;
@@ -123,6 +124,7 @@ function CompleteProfileForm() {
     });
 
     if (res.ok) {
+      track("profile_completed");
       router.push(redirectTo);
     }
   }

@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
+import { track, identify } from "@/lib/analytics";
 
 type PopupPhase = "email" | "otp";
 
@@ -42,6 +43,7 @@ function LoginPopup({ onClose }: { onClose: () => void }) {
     setEmailError("");
     setLoading(true);
     setError("");
+    track("login_email_submitted");
     try {
       const res = await fetch("/api/auth/send-otp", {
         method: "POST",
@@ -50,12 +52,14 @@ function LoginPopup({ onClose }: { onClose: () => void }) {
       });
       if (!res.ok) {
         const data = await res.json();
+        track("login_failed", { reason: res.status === 429 ? "rate_limited" : "send_failed" });
         setError(data?.error ?? "Failed to send OTP");
         return;
       }
       setPhase("otp");
       setTimeout(() => otpRefs.current[0]?.focus(), 350);
     } catch {
+      track("login_failed", { reason: "network", email });
       setError("Network error. Please try again.");
     } finally {
       setLoading(false);
@@ -75,6 +79,7 @@ function LoginPopup({ onClose }: { onClose: () => void }) {
     if (code.length < 6) return;
     setLoading(true);
     setError("");
+    track("otp_submitted");
     try {
       const res = await fetch("/api/auth/verify-otp", {
         method: "POST",
@@ -82,13 +87,20 @@ function LoginPopup({ onClose }: { onClose: () => void }) {
         body: JSON.stringify({ email, otp: code }),
       });
       const data = await res.json();
-      if (!res.ok) { setError(data?.error ?? "Invalid OTP"); return; }
+      if (!res.ok) {
+        track("login_failed", { reason: "invalid_otp" });
+        setError(data?.error ?? "Invalid OTP");
+        return;
+      }
+      track("login_completed", { is_new_user: data.is_new_user });
+      fetch("/api/auth/me").then((r) => r.json()).then((u) => { if (u?.id) identify(u.id); }).catch(() => {});
       if (data.is_new_user) {
         router.push(`/complete-profile?email=${encodeURIComponent(email)}&redirect=/bookings`);
       } else {
         router.push("/bookings");
       }
     } catch {
+      track("login_failed", { reason: "network", email });
       setError("Network error. Please try again.");
     } finally {
       setLoading(false);
@@ -333,13 +345,16 @@ export default function LandingPage() {
   const [checkingAuth, setCheckingAuth] = useState(false);
   const [videoReady, setVideoReady] = useState(false);
   const [loaderHidden, setLoaderHidden] = useState(false);
+  const videoLoadStart = useRef(Date.now());
 
   useEffect(() => {
+    track("landing_page_viewed");
     const t = setTimeout(() => setVideoReady(true), 3000);
     return () => clearTimeout(t);
   }, []);
 
   async function handleMyBookings() {
+    track("landing_cta_clicked", { cta: "my_bookings" });
     setCheckingAuth(true);
     try {
       const res = await fetch("/api/auth/me");
@@ -409,7 +424,7 @@ export default function LandingPage() {
         muted
         loop
         playsInline
-        onCanPlay={() => setVideoReady(true)}
+        onCanPlay={() => { track("landing_video_loaded", { load_time_ms: Date.now() - videoLoadStart.current }); setVideoReady(true); }}
         onError={() => setVideoReady(true)}
         style={{
           position: "absolute",
@@ -451,6 +466,7 @@ export default function LandingPage() {
         >
           <Link
             href="/events"
+            onClick={() => track("landing_cta_clicked", { cta: "all_events" })}
             style={{
               fontFamily: "var(--font-dm-sans)",
               fontSize: "18px",

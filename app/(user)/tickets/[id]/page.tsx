@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { track } from "@/lib/analytics";
 
 const glassPill: React.CSSProperties = {
   display: "inline-flex",
@@ -32,6 +33,8 @@ export default function TicketConfirmationPage() {
       .then((data) => {
         if (data?.event?.confirmationImageUrl) setConfirmationImageUrl(data.event.confirmationImageUrl);
         if (data?.event?.ticketVisualUrl) setTicketVisualUrl(data.event.ticketVisualUrl);
+        const eid = data?.event_id ?? data?.event?.id ?? null;
+        track("ticket_viewed", { ticket_id: id, event_id: eid });
       })
       .catch(() => {});
   }, [id]);
@@ -123,7 +126,7 @@ export default function TicketConfirmationPage() {
 
       {/* View QR code button */}
       <button
-        onClick={() => window.open(`/api/tickets/${id}/qr`, "_blank")}
+        onClick={() => { track("qr_opened", { ticket_id: id }); window.open(`/api/tickets/${id}/qr`, "_blank"); }}
         style={{
           ...glassPill,
           fontSize: "13px",
