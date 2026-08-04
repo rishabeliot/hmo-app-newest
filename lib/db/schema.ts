@@ -54,6 +54,7 @@ export const events = pgTable("events", {
   checkoutImageUrl: text("checkout_image_url"),
   confirmationImageUrl: text("confirmation_image_url"),
   ticketVisualUrl: text("ticket_visual_url"),
+  pricingInfo: text("pricing_info"),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 });
 
