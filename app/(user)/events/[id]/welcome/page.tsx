@@ -103,7 +103,7 @@ export default function WelcomePage() {
           minHeight: "44px",
         }}
       >
-        Let&apos;s go -&gt;
+        Let&apos;s go;
       </button>
     </main>
   );

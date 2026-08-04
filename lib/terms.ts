@@ -66,6 +66,4 @@ export const TERMS_AND_CONDITIONS = `<p><strong>By proceeding with this booking,
         <p><strong>Contact Us</strong><br>
         <a href="mailto:hearmeout.work@gmail.com">📧 hearmeout.work@gmail.com</a><br>
         📞 9980524564<br>
-        🏢 Ajan Media, 632/1, Old Post Office Road,<br>
-        Banashankari 7th Block,<br>
-        Bengaluru 560070.</p>`;
+        🏢 The Grove, Sarjapur Main Road, Bengaluru, Karnataka, Bengaluru - 560035.</p>`;

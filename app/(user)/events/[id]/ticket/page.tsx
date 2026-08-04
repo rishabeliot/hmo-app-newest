@@ -17,6 +17,7 @@ interface EventData {
   isAllowed: boolean;
   ticketPrice: number | null;
   checkoutImageUrl: string | null;
+  pricingInfo: string | null;
 }
 
 function formatDate(dateStr: string) {
@@ -103,6 +104,85 @@ function TermsModal({ onClose }: { onClose: () => void }) {
   );
 }
 
+function PricingInfoModal({ content, onClose }: { content: string; onClose: () => void }) {
+  return (
+    <div
+      onClick={onClose}
+      style={{
+        position: "fixed",
+        inset: 0,
+        background: "rgba(0,0,0,0.75)",
+        zIndex: 100,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "24px",
+      }}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          background: "#000000",
+          border: "1px solid rgba(255,255,255,0.25)",
+          borderRadius: "20px",
+          padding: "28px 24px",
+          width: "85%",
+          maxWidth: "300px",
+          position: "relative",
+        }}
+      >
+        <button
+          onClick={onClose}
+          aria-label="Close"
+          style={{
+            position: "absolute",
+            top: "14px",
+            right: "14px",
+            background: "rgba(255,255,255,0.1)",
+            border: "1px solid rgba(255,255,255,0.15)",
+            color: "white",
+            width: "30px",
+            height: "30px",
+            borderRadius: "50%",
+            fontSize: "18px",
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            lineHeight: 1,
+          }}
+        >
+          ×
+        </button>
+        <h2
+          style={{
+            fontFamily: "var(--font-dm-sans)",
+            fontWeight: 700,
+            fontSize: "18px",
+            color: "white",
+            margin: "0 0 16px",
+          }}
+        >
+          Pricing
+        </h2>
+        <p
+          style={{
+            fontFamily: "var(--font-dm-sans)",
+            fontSize: "14px",
+            fontWeight: 300,
+            color: "rgba(255,255,255,0.8)",
+            margin: 0,
+            lineHeight: 1.6,
+            whiteSpace: "pre-line",
+          }}
+        >
+          {content}
+        </p>
+      </div>
+    </div>
+  );
+}
+
 declare global {
   interface Window {
     Razorpay: new (options: Record<string, unknown>) => { open(): void };
@@ -119,6 +199,7 @@ export default function TicketPage() {
   const [accepted, setAccepted] = useState(false);
   const [showTerms, setShowTerms] = useState(false);
   const [paying, setPaying] = useState(false);
+  const [showPricingInfo, setShowPricingInfo] = useState(false);
   const { message, visible, showToast } = useToast();
 
   useEffect(() => {
@@ -227,7 +308,7 @@ export default function TicketPage() {
         }}
       >
         {/* Upper section: fixed-height container holding the overlapping text + card */}
-        <div style={{ position: "relative", height: "640px" }}>
+        <div style={{ position: "relative", height: "530px" }}>
           {/* "Confirm" — Jersey 25, 80px */}
           <p
             style={{
@@ -341,40 +422,47 @@ export default function TicketPage() {
                       fontSize: "12px",
                       fontWeight: 300,
                       color: "rgba(255,255,255,0.85)",
-                      display: "flex",
-                      alignItems: "baseline",
-                      gap: "6px",
                     }}
                   >
                     {value}
-                    {label === "Ticket Price" && value !== "..." && (
-                      <span style={{ fontSize: "10px", color: "rgba(255,255,255,0.45)", fontWeight: 300 }}>
-                        (Rs. 1,000 cover)
-                      </span>
-                    )}
                   </span>
                 </div>
               ))}
-            </div>
-
-            {/* Bottom row */}
-            <div
-              style={{
-                marginTop: "12px",
-                paddingBottom: "4px",
-              }}
-            >
-              <span
-                style={{
-                  fontFamily: "var(--font-dm-sans)",
-                  fontSize: "13px",
-                  fontWeight: 300,
-                  color: "white",
-                }}
-              >
-                Additonal cover charge applicable after{" "}
-                <span style={{ fontWeight: 700 }}>10:30pm</span>
-              </span>
+              {event?.pricingInfo && (
+                <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                  <span
+                    style={{
+                      fontFamily: "var(--font-dm-sans)",
+                      fontSize: "12px",
+                      fontWeight: 300,
+                      color: "white",
+                    }}
+                  >
+                    Tickets are priced by entry time
+                  </span>
+                  <button
+                    onClick={() => setShowPricingInfo(true)}
+                    style={{
+                      background: "none",
+                      border: "1px solid rgba(255,255,255,0.35)",
+                      borderRadius: "50%",
+                      width: "14px",
+                      height: "14px",
+                      color: "rgba(255,255,255,0.6)",
+                      fontSize: "9px",
+                      fontWeight: 700,
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      padding: 0,
+                      flexShrink: 0,
+                    }}
+                  >
+                    i
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -520,6 +608,9 @@ export default function TicketPage() {
       </main>
 
       {showTerms && <TermsModal onClose={() => setShowTerms(false)} />}
+      {showPricingInfo && event?.pricingInfo && (
+        <PricingInfoModal content={event.pricingInfo} onClose={() => setShowPricingInfo(false)} />
+      )}
       <Toast message={message} visible={visible} />
     </>
   );
