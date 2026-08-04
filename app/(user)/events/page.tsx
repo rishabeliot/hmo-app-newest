@@ -148,11 +148,24 @@ function ProfilePopup({ user, onClose }: { user: User; onClose: () => void }) {
 }
 
 function UpcomingCard({ event, isAuthenticated }: { event: Event; isAuthenticated: boolean }) {
-  const href = event.isAllowed
+  const isClickable = !event.isBooked && !event.isTicketingClosed;
+  const href = !isAuthenticated
+    ? "/login"
+    : event.isAllowed
     ? `/events/${event.id}/welcome`
     : `/waitlist?event=${event.id}`;
 
-  const pillBase: React.CSSProperties = {
+  const pillLabel = event.isBooked
+    ? "Booked ✓"
+    : event.isTicketingClosed
+    ? "Sold Out"
+    : !isAuthenticated
+    ? "Login to book"
+    : event.isAllowed
+    ? "Buy ticket"
+    : "Register";
+
+  const pillStyle: React.CSSProperties = {
     display: "block",
     padding: "10px 16px",
     borderRadius: "20px",
@@ -163,27 +176,11 @@ function UpcomingCard({ event, isAuthenticated }: { event: Event; isAuthenticate
     fontSize: "13px",
     fontWeight: 400,
     whiteSpace: "nowrap" as const,
+    color: !isClickable ? "rgba(255,255,255,0.4)" : "white",
+    opacity: !isClickable ? 0.5 : 1,
   };
 
-  const ctaNode = event.isBooked ? (
-    <div style={{ ...pillBase, color: "rgba(255,255,255,0.5)", cursor: "default", opacity: 0.5 }}>
-      Booked ✓
-    </div>
-  ) : event.isTicketingClosed ? (
-    <div style={{ ...pillBase, color: "rgba(255,255,255,0.4)", cursor: "default", opacity: 0.5 }}>
-      Sold Out
-    </div>
-  ) : !isAuthenticated ? (
-    <Link href="/login" onClick={() => track("event_card_clicked", { event_id: event.id, type: "upcoming" })} style={{ ...pillBase, textDecoration: "none", color: "white" }}>
-      Login to book
-    </Link>
-  ) : (
-    <Link href={href} onClick={() => track("event_card_clicked", { event_id: event.id, type: "upcoming" })} style={{ ...pillBase, textDecoration: "none" }}>
-      {event.isAllowed ? "Buy ticket" : "Register"}
-    </Link>
-  );
-
-  return (
+  const cardInner = (
     <div
       style={{
         width: "292px",
@@ -198,6 +195,7 @@ function UpcomingCard({ event, isAuthenticated }: { event: Event; isAuthenticate
         position: "relative",
         overflow: "hidden",
         flexShrink: 0,
+        cursor: isClickable ? "pointer" : "default",
       }}
     >
       {/* Dark gradient overlay */}
@@ -274,11 +272,23 @@ function UpcomingCard({ event, isAuthenticated }: { event: Event; isAuthenticate
         </div>
       </div>
 
-      {/* CTA button */}
+      {/* CTA pill */}
       <div style={{ position: "absolute", bottom: "12px", right: "12px" }}>
-        {ctaNode}
+        <div style={pillStyle}>{pillLabel}</div>
       </div>
     </div>
+  );
+
+  if (!isClickable) return cardInner;
+
+  return (
+    <Link
+      href={href}
+      onClick={() => track("event_card_clicked", { event_id: event.id, type: "upcoming" })}
+      style={{ textDecoration: "none", display: "block" }}
+    >
+      {cardInner}
+    </Link>
   );
 }
 
