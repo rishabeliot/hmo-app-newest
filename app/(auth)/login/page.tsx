@@ -99,7 +99,7 @@ export default function LoginPage() {
         return;
       }
       track("login_completed", { is_new_user: data.is_new_user });
-      fetch("/api/auth/me").then((r) => r.json()).then((u) => { if (u?.id) identify(u.id); }).catch(() => {});
+      fetch("/api/auth/me").then((r) => r.json()).then((u) => { if (u?.email) identify(u.email); }).catch(() => {});
       if (data.is_new_user) {
         router.push(`/complete-profile?email=${encodeURIComponent(email)}`);
       } else {

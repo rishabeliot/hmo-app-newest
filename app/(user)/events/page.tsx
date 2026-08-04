@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
-import { track } from "@/lib/analytics";
+import { track, identify } from "@/lib/analytics";
 
 interface User {
   id: string;
@@ -378,6 +378,7 @@ export default function EventsPage() {
         fetch("/api/events"),
       ]);
       const userData = userRes.ok ? await userRes.json() : null;
+      if (userData?.email) identify(userData.email);
       if (!eventsRes.ok) {
         track("events_load_failed", { error: "Failed to load events" });
         setError("Failed to load. Please try again.");
